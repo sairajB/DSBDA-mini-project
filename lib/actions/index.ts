@@ -35,15 +35,17 @@ export async function scrapeAndStoreProduct(productUrl: string) {
         highestPrice: getHighestPrice(updatedPriceHistory),
         averagePrice: getAveragePrice(updatedPriceHistory),
       }
-    }
-
-    const newProduct = await Product.findOneAndUpdate(
+    }    const newProduct = await Product.findOneAndUpdate(
       { url: scrapedProduct.url },
       product,
       { upsert: true, new: true }
     );
 
     revalidatePath(`/products/${newProduct._id}`);
+    
+    // Store the product ID in cookies instead of returning directly
+    // This is a workaround for the serialization issue
+    return { success: true, productId: newProduct._id.toString() };
   } catch (error: any) {
     throw new Error(`Failed to create/update product: ${error.message}`)
   }
